@@ -1,9 +1,10 @@
 # 🔒 ARCHIVOS SENSIBLES - NO SUBIR A GITHUB
 .env
-.env.*
 .env.local
 .env.production
 .env.development
+# Permitir archivos de ejemplo
+!.env.example
 credenciales.json
 config/keys.js
 config/database.js
