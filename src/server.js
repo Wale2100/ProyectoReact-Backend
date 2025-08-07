@@ -3,21 +3,37 @@ import { connectDB, closeDB, getConnectionStatus, db } from './db.js';
 import fs from 'fs';
 import admin from 'firebase-admin';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
 
-// Cargar credenciales de Firebase usando path absoluto
-import path from 'path';
-import { fileURLToPath } from 'url';
+// Configurar Firebase Admin SDK
+let firebaseCredentials;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const credencialesPath = path.join(__dirname, '..', 'credenciales.json');
-
-const credenciales = JSON.parse(fs.readFileSync(credencialesPath, 'utf-8'));
+if (process.env.FIREBASE_ADMIN_CREDENTIALS) {
+  // En producción (Railway): usar variable de entorno
+  console.log('🔥 Cargando Firebase Admin desde variable de entorno...');
+  firebaseCredentials = JSON.parse(process.env.FIREBASE_ADMIN_CREDENTIALS);
+} else {
+  // En desarrollo local: usar archivo
+  console.log('🔥 Cargando Firebase Admin desde archivo local...');
+  
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const credencialesPath = path.join(__dirname, '..', 'credenciales.json');
+  
+  try {
+    firebaseCredentials = JSON.parse(fs.readFileSync(credencialesPath, 'utf-8'));
+  } catch (error) {
+    console.error('❌ Error cargando credenciales de Firebase:', error.message);
+    console.log('💡 Para Railway: configura FIREBASE_ADMIN_CREDENTIALS como variable de entorno');
+    process.exit(1);
+  }
+}
 
 admin.initializeApp({
-  credential: admin.credential.cert(credenciales)
+  credential: admin.credential.cert(firebaseCredentials)
 });
 
 const app = express();
